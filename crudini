@@ -947,8 +947,15 @@ Options:
         except configparser.NoOptionError:
             error('Parameter not found: %s' % self.param)
             sys.exit(1)
+        except BrokenPipeError:
+            # On py2.7, we were ignoring this (below). On Python3,
+            # we'll keep getting a broken pipe unless we redirect
+            # to /dev/null
+            nullf = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(nullf, sys.stdout.fileno())
+        # Below is no longer needed in py3; could remove
         except EnvironmentError as e:
-            # Handle EPIPE as python doesn't catch SIGPIPE
+            # Handle EPIPE as python 2 doesn't catch SIGPIPE
             if e.errno != errno.EPIPE:
                 error(str(e))
                 sys.exit(1)
