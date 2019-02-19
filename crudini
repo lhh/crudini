@@ -10,8 +10,7 @@
 from __future__ import print_function
 
 import atexit
-from cStringIO import StringIO
-import ConfigParser
+import sys
 import contextlib
 import errno
 import getopt
@@ -21,8 +20,14 @@ import os
 import pipes
 import shutil
 import string
-import sys
 import tempfile
+
+if sys.version_info[0] >= 3:
+    from io import StringIO
+    import configparser
+else:
+    from cStringIO import StringIO
+    import ConfigParser as configparser
 
 
 def error(message=None):
@@ -658,14 +663,14 @@ Options:
                     )
                     self.added_default_section = True
 
-        except ConfigParser.MissingSectionHeaderError:
+        except configparser.MissingSectionHeaderError:
             conf = self._parse_file(
                 filename,
                 add_default=True,
                 preserve_case=preserve_case
             )
             self.added_default_section = True
-        except ConfigParser.ParsingError as e:
+        except configparser.ParsingError as e:
             error(str(e))
             sys.exit(1)
 
@@ -681,14 +686,14 @@ Options:
                     section == iniparse.DEFAULTSECT or
                     self.conf.has_section(section)
                 ):
-                    raise ConfigParser.NoSectionError(section)
+                    raise configparser.NoSectionError(section)
             else:
                 try:
                     curr_val = self.conf.get(section, param)
-                except ConfigParser.NoSectionError:
+                except configparser.NoSectionError:
                     if self.update == 'section':
                         raise
-                except ConfigParser.NoOptionError:
+                except configparser.NoOptionError:
                     if self.update == 'param':
                         raise
         elif (section != iniparse.DEFAULTSECT and
@@ -706,7 +711,7 @@ Options:
             if self.update not in ('param', 'section'):
                 try:
                     curr_val = self.conf.get(section, param)
-                except ConfigParser.NoOptionError:
+                except configparser.NoOptionError:
                     if self.mode == "--del":
                         return
             if value is None:
@@ -739,11 +744,11 @@ Options:
                 # XXX: Note this doesn't update an item in section
                 # if matching value also in default (global) section.
                 if defaults_to_strip.get(item[0]) != item[1]:
-                    ignore_errs = (ConfigParser.NoOptionError,)
+                    ignore_errs = (configparser.NoOptionError,)
                     if self.section is not None:
                         msection = self.section
                     elif self.update not in ('param', 'section'):
-                        ignore_errs += (ConfigParser.NoSectionError,)
+                        ignore_errs += (configparser.NoSectionError,)
                     try:
                         set_param = True
                         self.set_name_value(msection, item[0], item[1])
@@ -763,13 +768,13 @@ Options:
             else:
                 if not self.conf.remove_section(self.section) \
                    and self.update in ('param', 'section'):
-                    raise ConfigParser.NoSectionError(self.section)
+                    raise configparser.NoSectionError(self.section)
         elif self.value is None:
             try:
                 if not self.conf.remove_option(self.section, self.param) \
                    and self.update == 'param':
-                    raise ConfigParser.NoOptionError(self.section, self.param)
-            except ConfigParser.NoSectionError:
+                    raise configparser.NoOptionError(self.section, self.param)
+            except configparser.NoSectionError:
                 if self.update in ('param', 'section'):
                     raise
         else:  # remove item from list
@@ -945,13 +950,13 @@ Options:
             # Finish writing now to consistently handle errors here
             # (and while excepthook is set)
             sys.stdout.flush()
-        except ConfigParser.ParsingError as e:
+        except configparser.ParsingError as e:
             error('Error parsing %s: %s' % (self.cfgfile, e.message))
             sys.exit(1)
-        except ConfigParser.NoSectionError as e:
+        except configparser.NoSectionError as e:
             error('Section not found: %s' % e.section)
             sys.exit(1)
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             error('Parameter not found: %s' % self.param)
             sys.exit(1)
         except EnvironmentError as e:
