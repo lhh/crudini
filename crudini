@@ -948,10 +948,14 @@ Options:
             error('Parameter not found: %s' % self.param)
             sys.exit(1)
         except EnvironmentError as e:
-            # Handle EPIPE as python doesn't catch SIGPIPE
+            # Handle EPIPE as python 2 doesn't catch SIGPIPE
             if e.errno != errno.EPIPE:
                 error(str(e))
                 sys.exit(1)
+            # Python3 fix for exception on exit:
+            # https://docs.python.org/3/library/signal.html#note-on-sigpipe
+            nullf = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(nullf, sys.stdout.fileno())
 
 
 def main():
