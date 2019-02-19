@@ -353,7 +353,10 @@ class Crudini():
                 st = os.stat(name)
                 os.fchown(f, st.st_uid, st.st_gid)
 
-            os.write(f, data)
+            if sys.version_info[0] >= 3:
+                os.write(f, bytearray(data, 'utf-8'))
+            else:
+                os.write(f, data)
             # We assume the existing file is persisted,
             # so sync here to ensure new data is persisted
             # before referencing it.  Otherwise the metadata could
@@ -590,7 +593,10 @@ Options:
 
     def _chksum(self, data):
         h = hashlib.sha256()
-        h.update(data)
+        if sys.version_info[0] >= 3:
+            h.update(bytearray(data, 'utf-8'))
+        else:
+            h.update(data)
         return h.digest()
 
     def _parse_file(self, filename, add_default=False, preserve_case=False):
