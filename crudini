@@ -493,7 +493,7 @@ Options:
                 'version'
             ]
             opts, args = getopt.getopt(sys.argv[1:], '', long_options)
-        except getopt.GetoptError, e:
+        except getopt.GetoptError as e:
             error(str(e))
             self.usage(1)
 
